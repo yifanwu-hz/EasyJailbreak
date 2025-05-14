@@ -61,6 +61,7 @@ class HuggingfaceModel(WhiteBoxModelBase):
 
         if generation_config is None:
             generation_config = {}
+        
         self.generation_config = generation_config
 
     def set_system_message(self, system_message: str):
@@ -250,7 +251,7 @@ class HuggingfaceModel(WhiteBoxModelBase):
 
 
 def from_pretrained(model_name_or_path: str, model_name: str, tokenizer_name_or_path: Optional[str] = None,
-                    dtype: Optional[torch.dtype] = None, **generation_config: Dict[str, Any]) -> HuggingfaceModel:
+                    dtype: Optional[torch.dtype] = None, generation_config: Optional[Dict[str, Any]] = None) -> HuggingfaceModel:
     """
     Imports a Hugging Face model and tokenizer with a single function call.
 
@@ -278,7 +279,7 @@ def from_pretrained(model_name_or_path: str, model_name: str, tokenizer_name_or_
     """
     if dtype is None:
         dtype = 'auto'
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map='auto', trust_remote_code=True, low_cpu_mem_usage=True, torch_dtype=dtype).eval()
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map='cuda', trust_remote_code=True, low_cpu_mem_usage=True, torch_dtype=dtype).eval()
     if tokenizer_name_or_path is None:
         tokenizer_name_or_path = model_name_or_path
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path, trust_remote_code=True)
