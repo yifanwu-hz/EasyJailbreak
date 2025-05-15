@@ -392,6 +392,7 @@ class AutoDAN(AttackerBase):
             logging.info("Jailbreak interrupted by user!")
         self.log()
         logging.info("Jailbreak finished!")
+        self.jailbreak_datasets = self.attack_results
         return self.attack_results
 
 
@@ -556,9 +557,9 @@ class AutoDAN(AttackerBase):
                 best_prompt = adv_prefix
 
         new_instance = instance.copy()
+        new_instance.jailbreak_prompt = best_prompt + '{query}'
         new_instance.parents.append(instance)
         instance.children.append(new_instance)
-        new_instance.jailbreak_prompt = best_prompt + '{query}'
         return JailbreakDataset([new_instance])
 
 
