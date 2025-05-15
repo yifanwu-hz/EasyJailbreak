@@ -19,7 +19,7 @@ import random
 from fastchat import model
 import nltk
 from nltk.corpus import stopwords, wordnet
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, GenerationConfig
 from tqdm import tqdm
 from itertools import islice
 from easyjailbreak.attacker import AttackerBase
@@ -59,6 +59,9 @@ def generate(model: AutoModelForCausalLM, tokenizer, input_ids, assistant_role_s
     if gen_config is None:
         gen_config = model.generation_config
         gen_config.max_new_tokens = 64
+    elif isinstance(gen_config, dict):
+        gen_config = GenerationConfig(**gen_config)
+        
     input_ids = input_ids[:assistant_role_slice.stop].to(model.device).unsqueeze(0)
     attn_masks = torch.ones_like(input_ids).to(model.device)
     output_ids = model.generate(input_ids,
@@ -170,7 +173,7 @@ class AutoDAN(AttackerBase):
         for o in range(len(self.reference)):
             self.reference[o] = self.reference[o].replace('ChatGPT', self.model_name)
             self.reference[o] = self.reference[o].replace('chatGPT', self.model_name)
-            self.reference[o] = self.reference[o].replace('ModelKeeper', get_developer(self.model_name))
+            #self.reference[o] = self.reference[o].replace('ModelKeeper', get_developer(self.model_name))
             self.reference[o] = self.reference[o] + ' [PROMPT]:'
 
 
@@ -346,7 +349,7 @@ class AutoDAN(AttackerBase):
             tokenizer=self.target_model.tokenizer,
             input_ids=prefix_manager.get_input_ids(adv_string=adv_prefix).to(self.device),
             assistant_role_slice=prefix_manager._assistant_role_slice,
-            gen_config=None
+            gen_config=self.target_model.generation_config
         )
         response = self.target_model.tokenizer.decode(output_ids).strip()
 
@@ -643,10 +646,10 @@ class autodan_PrefixManager:
                 self._target_slice = slice(self._assistant_role_slice.stop, len(toks) - 1)
                 self._loss_slice = slice(self._assistant_role_slice.stop - 1, len(toks) - 2)
             else:
-                self._system_slice = slice(
-                    None,
-                    encoding.char_to_token(len(self.conv_template.system))
-                )
+                # self._system_slice = slice(
+                #     None,
+                #     encoding.char_to_token(len(self.conv_template.system))
+                # )
                 self._user_role_slice = slice(
                     encoding.char_to_token(prompt.find(self.conv_template.roles[0])),
                     encoding.char_to_token(
