@@ -127,7 +127,7 @@ class HuggingfaceModel(WhiteBoxModelBase):
         kwargs.update({input_field_name: input_ids})
         output_ids = self.model.generate(**kwargs, **self.generation_config)
         output = self.tokenizer.decode(output_ids[0][input_length:], skip_special_tokens=True)
-
+        print("Model just outputted:", output)
         return output
 
     def batch_generate(self, conversations, **kwargs)-> List[str]:
@@ -279,7 +279,7 @@ def from_pretrained(model_name_or_path: str, model_name: str, tokenizer_name_or_
     """
     if dtype is None:
         dtype = 'auto'
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map='cuda', trust_remote_code=True, low_cpu_mem_usage=True, torch_dtype=dtype).eval()
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map='auto', trust_remote_code=True, low_cpu_mem_usage=True, torch_dtype=dtype)
     if tokenizer_name_or_path is None:
         tokenizer_name_or_path = model_name_or_path
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path, trust_remote_code=True)
